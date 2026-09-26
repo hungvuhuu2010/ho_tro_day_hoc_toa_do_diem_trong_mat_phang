@@ -1561,8 +1561,8 @@ svg.addEventListener("pointercancel", (event) => {
 // =====================================================
 function generateCoordinate() {
     let x, y;
-    // Tỷ lệ 30% nằm trên trục (Ox hoặc Oy), 70% không nằm trên trục nào
-    const isOnAxis = Math.random() < 0.3; 
+    // Tỷ lệ 20% nằm trên trục (Ox hoặc Oy), 80% không nằm trên trục nào
+    const isOnAxis = Math.random() < 0.2; 
 
     if (isOnAxis) {
         // Nằm trên trục tọa độ (x = 0 hoặc y = 0, nhưng không đồng thời là O(0,0))
