@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=2.0">
+    <title>HỖ TRỢ DẠY HỌC TỌA ĐỘ ĐIỂM TRONG MẶT PHẲNG</title>
+	
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="app-container">
+
+
+<header class="header">
+    <h1>HỖ TRỢ DẠY HỌC TỌA ĐỘ ĐIỂM TRONG MẶT PHẲNG</h1>
+	<p>Tác giả: Vũ Hữu Hùng, trường THPT Nguyễn Trãi - Thường Tín</p><br>
+</header>	
+    <div class="mode-tabs">
+        <button class="mode-tab active" data-mode="read">
+            1. Đọc tọa độ điểm
+        </button>
+
+        <button class="mode-tab" data-mode="plot">
+            2. Vẽ điểm theo tọa độ
+        </button>
+		
+		<button class="mode-tab" data-mode="reflex">
+			3. Phản xạ
+		</button>
+    </div>
+
+
+
+<main class="app-main">
+
+    <aside class="control-panel">
+
+        <!-- BÀI ĐỌC TỌA ĐỘ -->
+        <section id="read-panel" class="exercise-panel">
+
+            <h3>Đọc tọa độ điểm</h3>
+
+            <p class="instruction">
+                Quan sát điểm
+                <strong id="read-point-name">A</strong>
+                trên mặt phẳng và nhập tọa độ.
+            </p>
+
+            <div class="input-row">
+
+                <div class="input-group">
+                    <label>Hoành độ x</label>
+                    <input
+                        id="answer-x"
+                        type="number"
+                        step="1"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="input-group">
+                    <label>Tung độ y</label>
+                    <input
+                        id="answer-y"
+                        type="number"
+                        step="1"
+                        autocomplete="off"
+                    >
+                </div>
+
+            </div>
+
+            <button id="check-answer" class="btn btn-primary">
+                Kiểm tra
+            </button>
+
+            <div id="read-feedback" class="feedback"></div>
+
+        </section>
+
+
+        <!-- BÀI VẼ ĐIỂM -->
+        <section id="plot-panel" class="exercise-panel" hidden>
+
+            <h3>Vẽ điểm có tọa độ cho trước</h3>
+
+            <p class="instruction">
+                Hãy click vào đúng vị trí của điểm
+                <strong id="plot-point-name">A</strong>.
+            </p>
+
+            <div class="target-coordinate">
+                <span id="target-coordinate">(2; 3)</span>
+            </div>
+
+            <div id="plot-feedback" class="feedback"></div>
+
+        </section>
+
+
+				<section id="reflex-panel" class="exercise-panel" hidden>
+			<h3>Phản xạ tọa độ</h3>
+
+			<p class="instruction">
+				Quan sát điểm
+				<strong id="reflex-point-name">A</strong>
+				và nhập tọa độ.
+			</p>
+
+			<div class="input-row">
+				<div class="input-group">
+					<label>Hoành độ x</label>
+					<input
+						id="reflex-answer-x"
+						type="number"
+						step="1"
+						autocomplete="off"
+					>
+				</div>
+
+				<div class="input-group">
+					<label>Tung độ y</label>
+					<input
+						id="reflex-answer-y"
+						type="number"
+						step="1"
+						autocomplete="off"
+					>
+				</div>
+			</div>
+
+			<button id="reflex-submit" class="btn btn-primary">
+				Trả lời
+			</button>
+
+			<div id="reflex-feedback" class="feedback"></div>
+		</section>
+
+        <!-- ĐIỂM -->
+        <section class="score-section">
+
+            <div class="score">
+                <span>Điểm</span>
+                <strong id="score">0</strong>
+            </div>
+
+            <button id="new-exercise" class="btn btn-success">
+                Bài mới
+            </button>
+
+        </section>
+
+    </aside>
+
+
+    <!-- MẶT PHẲNG TỌA ĐỘ -->
+    <section class="graph-viewport">
+
+        <svg
+            id="coordinate-system"
+            xmlns="http://www.w3.org/2000/svg"
+        ></svg>
+
+        <div
+            id="cursor-coords"
+            class="cursor-coords"
+        >
+            (0; 0)
+        </div>
+
+    </section>
+
+</main>
+
+
+</div>
+
+
+<!-- Thông báo yêu cầu xoay ngang trên mobile -->
+<div id="orientation-warning" class="orientation-warning">
+    <div class="orientation-warning-content">
+        <div class="orientation-icon">↻</div>
+        <h2>Vui lòng xoay ngang màn hình</h2>
+        <p>Ứng dụng được thiết kế để sử dụng ở chế độ ngang.</p>
+    </div>
+</div>
+
+<!-- Modal luật chơi phản xạ -->
+<div id="reflex-rules-modal" class="reflex-modal" hidden>
+    <div class="reflex-modal-overlay"></div>
+
+    <div class="reflex-modal-box">
+        <h2>Phản xạ tọa độ</h2>
+
+        <div class="reflex-rules">
+            <p><strong>Nhập thông tin học sinh:</strong></p>
+            <div class="input-group" style="margin-bottom: 12px;">
+                <label for="student-name-input">Họ và tên học sinh</label>
+                <input 
+                    id="student-name-input" 
+                    type="text" 
+                    placeholder="Nhập họ và tên của bạn..." 
+                    autocomplete="off"
+                    style="width: 100%; padding: 9px 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 1rem; outline: none;"
+                >
+            </div>
+
+            <p><strong>Luật chơi:</strong></p>
+            <ul>
+                <li>Hệ thống sẽ liên tục đưa ra các câu hỏi về tọa độ điểm.</li>
+                <li>Trả lời đúng: được cộng 1 điểm.</li>
+                <li>Trả lời sai: điểm trở về 0.</li>
+                <li>Lượt chơi kết thúc khi người chơi đạt 10 điểm.</li>
+            </ul>
+        </div>
+
+        <div class="reflex-modal-actions">
+            <button id="reflex-cancel" class="btn btn-secondary">Hủy</button>
+            <button id="reflex-start" class="btn btn-primary">Đồng ý, bắt đầu</button>
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
