@@ -1314,32 +1314,19 @@ svg.addEventListener("pointerdown", (event) => {
 // ---------------------------------------------------------
 // Pan khi kéo
 // ---------------------------------------------------------
+let renderPending = false;
+
 svg.addEventListener("pointermove", (event) => {
-    if (!activePointers.has(event.pointerId)) return;
+    // ... tính toán dx, dy, view.centerX, view.centerY ...
 
-    // Cập nhật vị trí mới của pointer
-    activePointers.set(event.pointerId, {
-        x: event.clientX,
-        y: event.clientY
-    });
-
-    // --- XỬ LÝ PAN (1 NGÓN TAY) ---
-    if (isPanning && activePointers.size === 1) {
-    // 1. Lấy khoảng cách di chuyển thực tế của ngón tay trên màn hình (đơn vị: CSS Pixel)
-    const touchDx = event.clientX - startPointer.x;
-    const touchDy = event.clientY - startPointer.y;
-
-    totalMoveDistance = Math.hypot(touchDx, touchDy);
-
-    // 2. Chỉ thực hiện trượt nếu ngón tay di chuyển vượt ngưỡng chạm nhẹ (3px)
-    if (totalMoveDistance > 3) {
-        // Tỷ lệ quy đổi: Cộng trực tiếp khoảng cách pixel ngón tay trượt vào tâm hiển thị
-        view.centerX = startCenter.x + touchDx;
-        view.centerY = startCenter.y + touchDy;
-
-        drawCoordinateSystem();
+    if (!renderPending) {
+        renderPending = true;
+        requestAnimationFrame(() => {
+            drawCoordinateSystem();
+            renderPending = false;
+        });
     }
-}
+});
 
     // --- XỬ LÝ PINCH ZOOM (2 NGÓN TAY) ---
     if (activePointers.size === 2 && initialPinchDistance) {
