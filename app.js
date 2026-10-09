@@ -1272,7 +1272,7 @@ const ZOOM_MAX = 200;
 const activePointers = new Map();
 let initialPinchDistance = null;
 const PAN_SENSITIVITY = 1.25;
-const PAN_THRESHOLD = 1;
+const PAN_THRESHOLD = 0;
 
 // ---------------------------------------------------------
 // Bắt đầu pan
