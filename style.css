@@ -410,15 +410,10 @@ overflow: hidden;
 }
 
 #coordinate-system {
-width: 100%;
-height: 100%;
-
-```
-display: block;
-
-cursor: crosshair;
-```
-
+    width: 100%;
+    height: 100%;
+    touch-action: none; /* Ngăn trình duyệt can thiệp cuộn trang mặc định */
+    will-change: transform; /* Báo cho GPU tối ưu trước */
 }
 
 /* =====================================================
