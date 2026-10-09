@@ -1040,101 +1040,39 @@ CLICK MẶT PHẲNG
 ===================================================== */
 
 svg.addEventListener("click", event => {
+    if (state.mode !== "plot") return;
+    if (state.answered) return;
 
+    // Nếu người dùng vừa thực hiện kéo màn hình (Pan > 6px) thì KHÔNG tính là click chấm điểm
+    if (totalMoveDistance > 6) return;
 
-if (state.mode !== "plot") return;
-if (state.answered) return;
+    const rect = svg.getBoundingClientRect();
+    const px = event.clientX - rect.left;
+    const py = event.clientY - rect.top;
 
+    const math = svgToMath(px, py);
+    const x = Math.round(math.x);
+    const y = Math.round(math.y);
 
-const rect =
-    svg.getBoundingClientRect();
+    const target = state.exercise;
 
-
-const px =
-    event.clientX -
-    rect.left;
-
-const py =
-    event.clientY -
-    rect.top;
-
-
-const math =
-    svgToMath(px, py);
-
-
-/*
-   Làm tròn về tọa độ nguyên gần nhất.
-   Vì bài tập hiện tại dùng các điểm nguyên.
-*/
-
-const x =
-    Math.round(math.x);
-
-const y =
-    Math.round(math.y);
-
-
-const target =
-    state.exercise;
-
-
-if (
-    x === target.x &&
-    y === target.y
-) {
-
-    showFeedback(
-        plotFeedback,
-        "correct",
-        "Chính xác! Bạn đã đặt điểm đúng vị trí."
-    );
-
-    state.score++;
-
-    state.answered = true;
-
-
-    drawStudentPoint(
-        target.x,
-        target.y
-    );
-
-} else {
-
-    let message =
-        "Chưa đúng. ";
-
-
-    if (x !== target.x) {
-
-        message +=
-            x < target.x
-                ? "Điểm cần sang phải. "
-                : "Điểm cần sang trái. ";
+    if (x === target.x && y === target.y) {
+        showFeedback(plotFeedback, "correct", "Chính xác! Bạn đã đặt điểm đúng vị trí.");
+        state.score++;
+        state.answered = true;
+        drawStudentPoint(target.x, target.y);
+    } else {
+        let message = "Chưa đúng. ";
+        if (x !== target.x) {
+            message += x < target.x ? "Điểm cần sang phải. " : "Điểm cần sang trái. ";
+        }
+        if (y !== target.y) {
+            message += y < target.y ? "Điểm cần lên trên." : "Điểm cần xuống dưới.";
+        }
+        showFeedback(plotFeedback, "wrong", message);
     }
 
-
-    if (y !== target.y) {
-
-        message +=
-            y < target.y
-                ? "Điểm cần lên trên."
-                : "Điểm cần xuống dưới.";
-    }
-
-
-    showFeedback(
-        plotFeedback,
-        "wrong",
-        message
-    );
-}
-
-
-updateScore();
-
-
+    updateScore();
 });
 
 /* =====================================================
@@ -1319,38 +1257,56 @@ updateViewSize
 
 
 // =========================================================
-// PAN + ZOOM MẶT PHẲNG TỌA ĐỘ
+// HỖ TRỢ PAN + ZOOM TỐI ƯU CHO MÀN HÌNH CẢM ỨNG & MÁY TÍNH
 // =========================================================
 
 let isPanning = false;
-let panStart = {
-    x: 0,
-    y: 0,
-    centerX: 0,
-    centerY: 0
-};
+let startPointer = { x: 0, y: 0 };
+let startCenter = { x: 0, y: 0 };
+let totalMoveDistance = 0; // Đo khoảng cách di chuyển để phân biệt Click vs Pan
 
-// Giới hạn zoom
-const ZOOM_MIN = 20;
-const ZOOM_MAX = 120;
+const ZOOM_MIN = 15;
+const ZOOM_MAX = 200;
+
+// Lưu danh sách ngón tay đang chạm màn hình
+const activePointers = new Map();
+let initialPinchDistance = null;
 
 
 // ---------------------------------------------------------
 // Bắt đầu pan
 // ---------------------------------------------------------
 svg.addEventListener("pointerdown", (event) => {
+    // Lưu thông tin vị trí chạm
+    activePointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+    });
 
-    // Trong chế độ vẽ điểm, vẫn cho phép click để chọn điểm.
-    // Nhưng chỉ xem là pan khi người dùng thực sự kéo.
-    isPanning = true;
+    // Nếu chạm 1 ngón tay -> Chuẩn bị cho Pan hoặc Click
+    if (activePointers.size === 1) {
+        isPanning = true;
+        totalMoveDistance = 0; // Reset khoảng cách kéo
 
-    panStart.x = event.clientX;
-    panStart.y = event.clientY;
+        startPointer.x = event.clientX;
+        startPointer.y = event.clientY;
 
-    panStart.centerX = view.centerX;
-    panStart.centerY = view.centerY;
+        startCenter.x = view.centerX;
+        startCenter.y = view.centerY;
 
-    svg.setPointerCapture(event.pointerId);
+        try {
+            svg.setPointerCapture(event.pointerId);
+        } catch (e) {}
+    } 
+    // Nếu chạm từ 2 ngón tay trở lên -> Chuyển sang chế độ Pinch Zoom, tắt Pan
+    else if (activePointers.size === 2) {
+        isPanning = false;
+        const points = [...activePointers.values()];
+        initialPinchDistance = Math.hypot(
+            points[0].x - points[1].x,
+            points[0].y - points[1].y
+        );
+    }
 });
 
 
@@ -1358,30 +1314,87 @@ svg.addEventListener("pointerdown", (event) => {
 // Pan khi kéo
 // ---------------------------------------------------------
 svg.addEventListener("pointermove", (event) => {
+    if (!activePointers.has(event.pointerId)) return;
 
-    if (!isPanning) return;
+    // Cập nhật vị trí mới của pointer
+    activePointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+    });
 
-    const dx = event.clientX - panStart.x;
-    const dy = event.clientY - panStart.y;
+    // --- XỬ LÝ PAN (1 NGÓN TAY) ---
+    if (isPanning && activePointers.size === 1) {
+        const dx = event.clientX - startPointer.x;
+        const dy = event.clientY - startPointer.y;
 
-    // Chuyển độ dịch pixel thành độ dịch của hệ tọa độ
-    view.centerX = panStart.centerX + dx;
-    view.centerY = panStart.centerY + dy;
+        // Tính tổng quãng đường ngón tay đã di chuyển
+        totalMoveDistance = Math.hypot(dx, dy);
 
-    drawCoordinateSystem();
+        // Chỉ di chuyển mặt phẳng nếu ngón tay di chuyển > 6px (tránh nhận nhầm khi chỉ chạm tay vào màn hình)
+        if (totalMoveDistance > 6) {
+            view.centerX = startCenter.x + dx;
+            view.centerY = startCenter.y + dy;
+            drawCoordinateSystem();
+        }
+    }
 
-    // Cập nhật tọa độ con trỏ
-    const rect = svg.getBoundingClientRect();
+    // --- XỬ LÝ PINCH ZOOM (2 NGÓN TAY) ---
+    if (activePointers.size === 2 && initialPinchDistance) {
+        const points = [...activePointers.values()];
+        const newDistance = Math.hypot(
+            points[0].x - points[1].x,
+            points[0].y - points[1].y
+        );
 
-    const px = event.clientX - rect.left;
-    const py = event.clientY - rect.top;
+        if (newDistance > 0 && initialPinchDistance > 0) {
+            const factor = newDistance / initialPinchDistance;
 
-    const point = svgToMath(px, py);
+            if (Math.abs(factor - 1) > 0.01) {
+                const rect = svg.getBoundingClientRect();
+                const centerPx = (points[0].x + points[1].x) / 2 - rect.left;
+                const centerPy = (points[0].y + points[1].y) / 2 - rect.top;
 
-    cursorCoords.textContent =
-        `(${point.x.toFixed(1)}; ${point.y.toFixed(1)})`;
+                const before = svgToMath(centerPx, centerPy);
+
+                view.scale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, view.scale * factor));
+
+                const after = svgToMath(centerPx, centerPy);
+
+                view.centerX += (after.x - before.x) * view.scale;
+                view.centerY -= (after.y - before.y) * view.scale;
+
+                initialPinchDistance = newDistance;
+                drawCoordinateSystem();
+            }
+        }
+    }
 });
 
+// ---------------------------------------------------------
+// 3. KHI NHẢ NGÓN TAY / HỦY CHẠM
+// ---------------------------------------------------------
+function handlePointerUp(event) {
+    if (activePointers.has(event.pointerId)) {
+        activePointers.delete(event.pointerId);
+    }
+
+    if (activePointers.size < 2) {
+        initialPinchDistance = null;
+    }
+
+    if (activePointers.size === 0) {
+        isPanning = false;
+    }
+
+    try {
+        if (svg.hasPointerCapture(event.pointerId)) {
+            svg.releasePointerCapture(event.pointerId);
+        }
+    } catch (e) {}
+}
+
+svg.addEventListener("pointerup", handlePointerUp);
+svg.addEventListener("pointercancel", handlePointerUp);
 
 // ---------------------------------------------------------
 // Kết thúc pan
@@ -1453,8 +1466,6 @@ svg.addEventListener("pointerdown", (event) => {
 });
 
 
-// Danh sách pointer đang chạm màn hình
-const activePointers = new Map();
 
 svg.addEventListener("pointerdown", (event) => {
 
