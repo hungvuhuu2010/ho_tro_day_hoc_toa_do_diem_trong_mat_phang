@@ -1044,7 +1044,7 @@ svg.addEventListener("click", event => {
     if (state.answered) return;
 
     // Nếu người dùng vừa thực hiện kéo màn hình (Pan > 6px) thì KHÔNG tính là click chấm điểm
-    if (totalMoveDistance > 6) return;
+    if (totalMoveDistance > 3) return;
 
     const rect = svg.getBoundingClientRect();
     const px = event.clientX - rect.left;
@@ -1271,7 +1271,8 @@ const ZOOM_MAX = 200;
 // Lưu danh sách ngón tay đang chạm màn hình
 const activePointers = new Map();
 let initialPinchDistance = null;
-
+const PAN_SENSITIVITY = 1.25;
+const PAN_THRESHOLD = 3;
 
 // ---------------------------------------------------------
 // Bắt đầu pan
@@ -1324,19 +1325,17 @@ svg.addEventListener("pointermove", (event) => {
 
     // --- XỬ LÝ PAN (1 NGÓN TAY) ---
     if (isPanning && activePointers.size === 1) {
-        const dx = event.clientX - startPointer.x;
-        const dy = event.clientY - startPointer.y;
+		const dx = (event.clientX - startPointer.x) * PAN_SENSITIVITY;
+		const dy = (event.clientY - startPointer.y) * PAN_SENSITIVITY;
 
-        // Tính tổng quãng đường ngón tay đã di chuyển
-        totalMoveDistance = Math.hypot(dx, dy);
+		totalMoveDistance = Math.hypot(dx, dy);
 
-        // Chỉ di chuyển mặt phẳng nếu ngón tay di chuyển > 6px (tránh nhận nhầm khi chỉ chạm tay vào màn hình)
-        if (totalMoveDistance > 6) {
-            view.centerX = startCenter.x + dx;
-            view.centerY = startCenter.y + dy;
-            drawCoordinateSystem();
-        }
-    }
+		if (totalMoveDistance > PAN_THRESHOLD) { // Giảm ngưỡng từ 6px xuống 4px để nhạy hơn
+			view.centerX = startCenter.x + dx;
+			view.centerY = startCenter.y + dy;
+			drawCoordinateSystem();
+		}
+	}
 
     // --- XỬ LÝ PINCH ZOOM (2 NGÓN TAY) ---
     if (activePointers.size === 2 && initialPinchDistance) {
