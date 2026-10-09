@@ -49,6 +49,31 @@ answered: false
 
 };
 
+
+// Biến điều khiển góc nhìn và tương tác
+
+let scale = 45;         // Mức zoom tương ứng với CONFIG.scale mặc định
+
+let panX = 0;           // Dịch chuyển tâm theo trục X (pixel)
+
+let panY = 0;           // Dịch chuyển tâm theo trục Y (pixel)
+
+let isDragging = false;
+
+let startX = 0;
+
+let startY = 0;
+
+let totalMoveDistance = 0; // Phân biệt Click chọn điểm và Drag/Pan
+
+
+
+// Cấu hình giới hạn Zoom
+
+const ZOOM_MIN = 15;
+
+const ZOOM_MAX = 200;
+
 /* =====================================================
 DOM
 ===================================================== */
@@ -1104,47 +1129,7 @@ svg.appendChild(point);
 TỌA ĐỘ CON TRỎ
 ===================================================== */
 
-svg.addEventListener("mousemove", event => {
 
-
-const rect =
-    svg.getBoundingClientRect();
-
-
-const px =
-    event.clientX -
-    rect.left;
-
-const py =
-    event.clientY -
-    rect.top;
-
-
-const math =
-    svgToMath(px, py);
-
-
-const x =
-    Math.round(math.x * 10) / 10;
-
-const y =
-    Math.round(math.y * 10) / 10;
-
-
-cursorCoords.textContent =
-    `(${x}; ${y})`;
-
-
-});
-
-svg.addEventListener("mouseleave", () => {
-
-
-cursorCoords.textContent =
-    "(0; 0)";
-
-
-});
 
 /* =====================================================
 FEEDBACK
@@ -1260,131 +1245,12 @@ updateViewSize
 // HỖ TRỢ PAN + ZOOM TỐI ƯU CHO MÀN HÌNH CẢM ỨNG & MÁY TÍNH
 // =========================================================
 
-let isPanning = false;
-let startPointer = { x: 0, y: 0 };
-let startCenter = { x: 0, y: 0 };
-let totalMoveDistance = 0; // Đo khoảng cách di chuyển để phân biệt Click vs Pan
 
-const ZOOM_MIN = 15;
-const ZOOM_MAX = 200;
-
-// Lưu danh sách ngón tay đang chạm màn hình
-const activePointers = new Map();
-let initialPinchDistance = null;
-const PAN_SENSITIVITY = 1.25;
-const PAN_THRESHOLD = 0;
 
 // ---------------------------------------------------------
 // Bắt đầu pan
 // ---------------------------------------------------------
-svg.addEventListener("pointerdown", (event) => {
-    // Lưu thông tin vị trí chạm
-    activePointers.set(event.pointerId, {
-        x: event.clientX,
-        y: event.clientY
-    });
 
-    // Nếu chạm 1 ngón tay -> Chuẩn bị cho Pan hoặc Click
-    if (activePointers.size === 1) {
-        isPanning = true;
-        totalMoveDistance = 0; // Reset khoảng cách kéo
-
-        startPointer.x = event.clientX;
-        startPointer.y = event.clientY;
-
-        startCenter.x = view.centerX;
-        startCenter.y = view.centerY;
-
-        try {
-            svg.setPointerCapture(event.pointerId);
-        } catch (e) {}
-    } 
-    // Nếu chạm từ 2 ngón tay trở lên -> Chuyển sang chế độ Pinch Zoom, tắt Pan
-    else if (activePointers.size === 2) {
-        isPanning = false;
-        const points = [...activePointers.values()];
-        initialPinchDistance = Math.hypot(
-            points[0].x - points[1].x,
-            points[0].y - points[1].y
-        );
-    }
-});
-
-
-// ---------------------------------------------------------
-// Pan khi kéo
-// ---------------------------------------------------------
-let renderPending = false;
-
-svg.addEventListener("pointermove", (event) => {
-    // ... tính toán dx, dy, view.centerX, view.centerY ...
-
-    if (!renderPending) {
-        renderPending = true;
-        requestAnimationFrame(() => {
-            drawCoordinateSystem();
-            renderPending = false;
-        });
-    }
-});
-
-    // --- XỬ LÝ PINCH ZOOM (2 NGÓN TAY) ---
-    if (activePointers.size === 2 && initialPinchDistance) {
-        const points = [...activePointers.values()];
-        const newDistance = Math.hypot(
-            points[0].x - points[1].x,
-            points[0].y - points[1].y
-        );
-
-        if (newDistance > 0 && initialPinchDistance > 0) {
-            const factor = newDistance / initialPinchDistance;
-
-            if (Math.abs(factor - 1) > 0.01) {
-                const rect = svg.getBoundingClientRect();
-                const centerPx = (points[0].x + points[1].x) / 2 - rect.left;
-                const centerPy = (points[0].y + points[1].y) / 2 - rect.top;
-
-                const before = svgToMath(centerPx, centerPy);
-
-                view.scale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, view.scale * factor));
-
-                const after = svgToMath(centerPx, centerPy);
-
-                view.centerX += (after.x - before.x) * view.scale;
-                view.centerY -= (after.y - before.y) * view.scale;
-
-                initialPinchDistance = newDistance;
-                drawCoordinateSystem();
-            }
-        }
-    }
-});
-
-// ---------------------------------------------------------
-// 3. KHI NHẢ NGÓN TAY / HỦY CHẠM
-// ---------------------------------------------------------
-function handlePointerUp(event) {
-    if (activePointers.has(event.pointerId)) {
-        activePointers.delete(event.pointerId);
-    }
-
-    if (activePointers.size < 2) {
-        initialPinchDistance = null;
-    }
-
-    if (activePointers.size === 0) {
-        isPanning = false;
-    }
-
-    try {
-        if (svg.hasPointerCapture(event.pointerId)) {
-            svg.releasePointerCapture(event.pointerId);
-        }
-    } catch (e) {}
-}
-
-svg.addEventListener("pointerup", handlePointerUp);
-svg.addEventListener("pointercancel", handlePointerUp);
 
 // ---------------------------------------------------------
 // Kết thúc pan
@@ -1399,46 +1265,13 @@ svg.addEventListener("pointerup", (event) => {
 });
 
 
-svg.addEventListener("pointercancel", () => {
-    isPanning = false;
-});
+
 
 
 // ---------------------------------------------------------
 // Zoom bằng con lăn chuột
 // ---------------------------------------------------------
-svg.addEventListener("wheel", (event) => {
 
-    event.preventDefault();
-
-    const rect = svg.getBoundingClientRect();
-
-    // Vị trí con trỏ trước khi zoom
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
-
-    const before = svgToMath(mouseX, mouseY);
-
-    // Zoom
-    const zoomFactor = event.deltaY < 0 ? 1.1 : 0.9;
-
-    const newScale = Math.max(
-        ZOOM_MIN,
-        Math.min(ZOOM_MAX, view.scale * zoomFactor)
-    );
-
-    view.scale = newScale;
-
-    // Tính lại vị trí điểm dưới con trỏ
-    const after = svgToMath(mouseX, mouseY);
-
-    // Điều chỉnh tâm để điểm dưới con trỏ
-    // vẫn nằm đúng vị trí đó sau khi zoom
-    view.centerX += (after.x - before.x) * view.scale;
-    view.centerY -= (after.y - before.y) * view.scale;
-
-    drawCoordinateSystem();
-});
 
 
 // ---------------------------------------------------------
@@ -1546,16 +1379,7 @@ svg.addEventListener("pointerup", (event) => {
 });
 
 
-svg.addEventListener("pointercancel", (event) => {
 
-    if (event.pointerType !== "touch") return;
-
-    activePointers.delete(event.pointerId);
-
-    if (activePointers.size < 2) {
-        pinchDistance = null;
-    }
-});
 
 // =====================================================
 // HÀM SINH TỌA ĐỘ VỚI TỶ LỆ 40% TRÊN TRỤC - 60% NGOÀI TRỤC
@@ -1655,3 +1479,358 @@ if (zoomOutBtn) {
 if (zoomResetBtn) {
     zoomResetBtn.addEventListener("click", resetView);
 }
+
+
+/* =========================================================================
+
+   KHỐI XỬ LÝ PAN VÀ ZOOM (SAO CHÉP TỪ DỰ ÁN MẪU & TỐI ƯU CHO DỰ ÁN CẦN CẢI TẠO)
+
+   ========================================================================= */
+
+
+
+
+
+
+
+/* -------------------------------------------------------------------------
+
+   1. CHUYỂN ĐỔI TỌA ĐỘ (Cập nhật theo panX, panY và scale)
+
+   ------------------------------------------------------------------------- */
+
+function mathToSvg(x, y) {
+
+    const parent = viewport || svg.parentElement;
+
+    const width = parent ? parent.clientWidth : (window.innerWidth || 800);
+
+    const height = parent ? parent.clientHeight : (window.innerHeight || 600);
+
+    const centerX = width / 2 + panX;
+
+    const centerY = height / 2 + panY;
+
+
+
+    return {
+
+        x: centerX + x * scale,
+
+        y: centerY - y * scale
+
+    };
+
+}
+
+
+
+function svgToMath(px, py) {
+
+    const parent = viewport || svg.parentElement;
+
+    const width = parent ? parent.clientWidth : (window.innerWidth || 800);
+
+    const height = parent ? parent.clientHeight : (window.innerHeight || 600);
+
+    const centerX = width / 2 + panX;
+
+    const centerY = height / 2 + panY;
+
+
+
+    return {
+
+        x: (px - centerX) / scale,
+
+        y: (centerY - py) / scale
+
+    };
+
+}
+
+
+
+/* -------------------------------------------------------------------------
+
+   2. KHỞI TẠO VÀ ĐĂNG KÝ SỰ KIỆN TƯƠNG TÁC (MOUSE, TOUCH & WHEEL)
+
+   ------------------------------------------------------------------------- */
+
+function initInteraction() {
+
+    const cursorCoords = document.getElementById("cursor-coords");
+
+
+
+    // --- A. TƯƠNG TÁC CHUỘT (MOUSE) ---
+
+    svg.addEventListener("mousedown", (e) => {
+
+        if (e.button !== 0) return; // Chỉ nhận chuột trái
+
+        isDragging = true;
+
+        totalMoveDistance = 0;
+
+        startX = e.clientX - panX;
+
+        startY = e.clientY - panY;
+
+    });
+
+
+
+    window.addEventListener("mousemove", (e) => {
+
+        if (isDragging) {
+
+            const currentPanX = e.clientX - startX;
+
+            const currentPanY = e.clientY - startY;
+
+            
+
+            totalMoveDistance = Math.hypot(currentPanX - panX, currentPanY - panY);
+
+            
+
+            panX = currentPanX;
+
+            panY = currentPanY;
+
+            drawCoordinateSystem(); // Vẽ lại mặt phẳng
+
+        }
+
+
+
+        // Cập nhật tọa độ con trỏ chuột
+
+        const rect = svg.getBoundingClientRect();
+
+        if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+
+            const px = e.clientX - rect.left;
+
+            const py = e.clientY - rect.top;
+
+            const math = svgToMath(px, py);
+
+            if (cursorCoords) {
+
+                cursorCoords.textContent = `(${Math.round(math.x * 10) / 10}; ${Math.round(math.y * 10) / 10})`;
+
+            }
+
+        }
+
+    });
+
+
+
+    window.addEventListener("mouseup", () => {
+
+        isDragging = false;
+
+    });
+
+
+
+    // --- B. TƯƠNG TÁC CẢM ỨNG (TOUCH CHO MOBILE / TABLET) ---
+
+    let initialPinchDist = null;
+
+
+
+    svg.addEventListener("touchstart", (e) => {
+
+        if (e.touches.length === 1) {
+
+            isDragging = true;
+
+            totalMoveDistance = 0;
+
+            startX = e.touches[0].clientX - panX;
+
+            startY = e.touches[0].clientY - panY;
+
+        } else if (e.touches.length === 2) {
+
+            isDragging = false;
+
+            initialPinchDist = Math.hypot(
+
+                e.touches[0].clientX - e.touches[1].clientX,
+
+                e.touches[0].clientY - e.touches[1].clientY
+
+            );
+
+        }
+
+    }, { passive: true });
+
+
+
+    window.addEventListener("touchmove", (e) => {
+
+        // Pan 1 ngón tay
+
+        if (isDragging && e.touches.length === 1) {
+
+            if (e.cancelable) e.preventDefault(); // Ngăn cuộn trang
+
+
+
+            const currentPanX = e.touches[0].clientX - startX;
+
+            const currentPanY = e.touches[0].clientY - startY;
+
+
+
+            totalMoveDistance = Math.hypot(currentPanX - panX, currentPanY - panY);
+
+
+
+            panX = currentPanX;
+
+            panY = currentPanY;
+
+            drawCoordinateSystem();
+
+        } 
+
+        // Pinch Zoom 2 ngón tay
+
+        else if (e.touches.length === 2 && initialPinchDist) {
+
+            if (e.cancelable) e.preventDefault();
+
+
+
+            const newDist = Math.hypot(
+
+                e.touches[0].clientX - e.touches[1].clientX,
+
+                e.touches[0].clientY - e.touches[1].clientY
+
+            );
+
+
+
+            if (newDist > 0 && initialPinchDist > 0) {
+
+                const zoomFactor = newDist / initialPinchDist;
+
+                scale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, scale * zoomFactor));
+
+                initialPinchDist = newDist;
+
+                drawCoordinateSystem();
+
+            }
+
+        }
+
+    }, { passive: false });
+
+
+
+    window.addEventListener("touchend", () => {
+
+        isDragging = false;
+
+        initialPinchDist = null;
+
+    });
+
+
+
+    // --- C. ZOOM BẰNG CON LĂN CHUỘT (WHEEL) ---
+
+    svg.addEventListener("wheel", (e) => {
+
+        e.preventDefault();
+
+        const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
+
+        scale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, scale * zoomFactor));
+
+        drawCoordinateSystem();
+
+    }, { passive: false });
+
+}
+
+
+
+/* -------------------------------------------------------------------------
+
+   3. CÁC NÚT ĐIỀU KHIỂN ZOOM / RESET VIEW
+
+   ------------------------------------------------------------------------- */
+
+function resetView() {
+
+    panX = 0;
+
+    panY = 0;
+
+    
+
+    // Tự động tính lại scale chuẩn fit màn hình
+
+    const parent = viewport || svg.parentElement;
+
+    const width = parent ? parent.clientWidth : 800;
+
+    const height = parent ? parent.clientHeight : 600;
+
+    const padding = 40;
+
+    const scaleX = (width - padding * 2) / (CONFIG.max - CONFIG.min);
+
+    const scaleY = (height - padding * 2) / (CONFIG.max - CONFIG.min);
+
+    
+
+    scale = Math.max(15, Math.min(scaleX, scaleY));
+
+    drawCoordinateSystem();
+
+}
+
+
+
+function applyZoom(factor) {
+
+    scale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, scale * factor));
+
+    drawCoordinateSystem();
+
+}
+
+
+
+// Lắng nghe các nút zoom ngoài UI
+
+//const zoomInBtn = document.getElementById("zoom-in-btn");
+
+//const zoomOutBtn = document.getElementById("zoom-out-btn");
+
+//const zoomResetBtn = document.getElementById("zoom-reset-btn");
+
+
+
+if (zoomInBtn) zoomInBtn.addEventListener("click", () => applyZoom(1.2));
+
+if (zoomOutBtn) zoomOutBtn.addEventListener("click", () => applyZoom(0.8));
+
+if (zoomResetBtn) zoomResetBtn.addEventListener("click", resetView);
+
+
+
+// Đăng ký khởi chạy sự kiện
+
+initInteraction();
