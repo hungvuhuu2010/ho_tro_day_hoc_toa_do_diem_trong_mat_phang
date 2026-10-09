@@ -1561,8 +1561,8 @@ svg.addEventListener("pointercancel", (event) => {
 // =====================================================
 function generateCoordinate() {
     let x, y;
-    // Tỷ lệ 20% nằm trên trục (Ox hoặc Oy), 80% không nằm trên trục nào
-    const isOnAxis = Math.random() < 0.2; 
+    // Tỷ lệ 30% nằm trên trục (Ox hoặc Oy), 70% không nằm trên trục nào
+    const isOnAxis = Math.random() < 0.3; 
 
     if (isOnAxis) {
         // Nằm trên trục tọa độ (x = 0 hoặc y = 0, nhưng không đồng thời là O(0,0))
@@ -1597,3 +1597,60 @@ updateViewSize();
 generateExercise();
 
 
+
+const fullscreenBtn = document.getElementById("fullscreen-btn");
+
+if (fullscreenBtn) {
+    fullscreenBtn.addEventListener("click", () => {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        }
+    });
+}
+
+
+// =========================================================
+// XỬ LÝ SỰ KIỆN NÚT ZOOM VÀ RESET VIEW
+// =========================================================
+const zoomInBtn = document.getElementById("zoom-in-btn");
+const zoomOutBtn = document.getElementById("zoom-out-btn");
+const zoomResetBtn = document.getElementById("zoom-reset-btn");
+
+// Hàm thực hiện Zoom theo tỉ lệ
+function applyZoom(factor) {
+    const newScale = Math.max(
+        ZOOM_MIN,
+        Math.min(ZOOM_MAX, view.scale * factor)
+    );
+    view.scale = newScale;
+    drawCoordinateSystem();
+}
+
+// Hàm Reset mặt phẳng tọa độ về tâm chính giữa
+function resetView() {
+    view.centerX = 0;
+    view.centerY = 0;
+    updateViewSize(); // Tính lại scale vừa vặn với kích thước màn hình
+}
+
+if (zoomInBtn) {
+    zoomInBtn.addEventListener("click", () => applyZoom(1.2));
+}
+
+if (zoomOutBtn) {
+    zoomOutBtn.addEventListener("click", () => applyZoom(0.8));
+}
+
+if (zoomResetBtn) {
+    zoomResetBtn.addEventListener("click", resetView);
+}

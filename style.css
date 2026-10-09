@@ -52,24 +52,49 @@ height: 100%;
 }
 
 header {
-background: var(--panel-bg);
-border-bottom: 1px solid var(--border-color);
-padding: 10px 16px 0;
-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-z-index: 10;
+    background: var(--panel-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header-content {
+    flex: 1;
+    text-align: center;
 }
 
 header h1 {
-font-size: 2rem;
+font-size: 1.1rem;
 color: var(--primary-color);
 text-align: center;
-margin-bottom: 10;
+margin-bottom: 4;
 }
 
 header p {
     font-size: 1rem;
 	text-align: center;
     color: #64748b;
+}
+
+.fullscreen-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullscreen-btn:hover {
+    background: #e2e8f0;
 }
 /* =====================================================
 TAB
@@ -484,234 +509,67 @@ opacity: 0.9;
 }
 
 /* =====================================================
-MOBILE / TABLET
-===================================================== */
-
+   RESPONSIVE CSS CHO MOBILE (< 768px)
+   ===================================================== */
 @media screen and (max-width: 768px) {
+    /* Thu gọn Header để không chiếm không gian màn hình */
+    header {
+        padding: 4px 8px;
+    }
 
-```
-body {
-    overflow: hidden;
+    header h1 {
+        font-size: 0.85rem;
+        margin-bottom: 2px;
+        line-height: 1.2;
+    }
+
+    header p {
+        font-size: 0.65rem;
+        line-height: 1;
+    }
+
+    /* Thu nhỏ Tab chuyển chế độ */
+    .mode-tab {
+        padding: 6px 8px;
+        font-size: 0.75rem;
+        min-height: 28px;
+    }
+
+    /* Thu nhỏ chữ trong bảng điều khiển */
+    .exercise-panel h3 {
+        font-size: 0.8rem;
+    }
+
+    .instruction {
+        font-size: 0.75rem;
+    }
+
+    .input-group label {
+        font-size: 0.7rem;
+    }
+
+    .input-group input {
+        min-height: 32px;
+        padding: 4px 6px;
+        font-size: 0.85rem;
+    }
+
+    .btn {
+        min-height: 32px;
+        padding: 6px 8px;
+        font-size: 0.8rem;
+    }
+
+    .target-coordinate {
+        padding: 6px;
+        font-size: 1.1rem;
+    }
+
+    .score strong {
+        font-size: 1.2rem;
+    }
 }
 
-/* -----------------------------
-   HEADER
------------------------------ */
-
-.app-header {
-    padding: 8px 10px 0;
-}
-
-.app-header h1 {
-    font-size: 1rem;
-    margin-bottom: 8px;
-}
-
-.mode-tabs {
-    width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
-    gap: 4px;
-}
-
-.mode-tabs::-webkit-scrollbar {
-    display: none;
-}
-
-.mode-tab {
-    flex: 0 0 auto;
-    white-space: nowrap;
-
-    padding: 8px 11px;
-
-    font-size: 1rem;
-    min-height: 34px;
-}
-
-
-/* -----------------------------
-   MAIN
-   Panel ở trên - đồ thị ở dưới
-   ----------------------------- */
-
-.app-main {
-    flex-direction: column;
-    min-height: 0;
-}
-
-
-/* -----------------------------
-   PANEL
------------------------------ */
-
-.control-panel {
-    width: 100%;
-    flex-shrink: 0;
-
-    /*
-     * Không để panel chiếm quá nhiều màn hình.
-     * Phần đồ thị luôn có không gian tối thiểu.
-     */
-    max-height: 40dvh;
-
-    padding: 10px;
-
-    border-right: none;
-    border-bottom: 1px solid var(--border-color);
-
-    gap: 8px;
-
-    overflow-y: auto;
-
-    box-shadow:
-        0 2px 5px rgba(0, 0, 0, 0.04);
-}
-
-
-.exercise-panel {
-    gap: 8px;
-}
-
-
-.exercise-panel h3 {
-    font-size: 0.9rem;
-    padding-bottom: 5px;
-}
-
-
-.instruction {
-    font-size: 0.8rem;
-    line-height: 1.35;
-}
-
-
-/* -----------------------------
-   INPUT
------------------------------ */
-
-.input-row {
-    gap: 7px;
-}
-
-.input-group {
-    gap: 3px;
-}
-
-.input-group label {
-    font-size: 0.72rem;
-}
-
-.input-group input {
-    min-height: 38px;
-    padding: 7px 8px;
-    font-size: 1rem;
-}
-
-
-/* -----------------------------
-   BUTTON
------------------------------ */
-
-.btn {
-    min-height: 38px;
-    padding: 8px 10px;
-
-    font-size: 0.84rem;
-}
-
-
-/* -----------------------------
-   FEEDBACK
------------------------------ */
-
-.feedback {
-    min-height: 0;
-
-    padding: 7px 8px;
-
-    font-size: 0.76rem;
-    line-height: 1.3;
-}
-
-
-/* -----------------------------
-   BÀI VẼ ĐIỂM
------------------------------ */
-
-.target-coordinate {
-    padding: 9px;
-
-    font-size: 1.4rem;
-
-    border-radius: 6px;
-}
-
-
-/* -----------------------------
-   SCORE
------------------------------ */
-
-.score-section {
-    margin-top: 0;
-
-    gap: 7px;
-}
-
-.score {
-    padding: 8px 10px;
-
-    font-size: 0.85rem;
-}
-
-.score strong {
-    font-size: 1rem;
-	
-}
-
-
-/* -----------------------------
-   GRAPH
------------------------------ */
-
-.graph-viewport {
-    flex: 1;
-
-    min-height: 0;
-
-    /*
-     * Quan trọng:
-     * cho phép SVG thực sự chiếm toàn bộ phần còn lại.
-     */
-    height: auto;
-
-    overflow: hidden;
-}
-
-
-#coordinate-system {
-    width: 100%;
-    height: 100%;
-
-    /*
-     * Ngăn trình duyệt xử lý swipe/pinch
-     * thành thao tác cuộn trang.
-     */
-    touch-action: none;
-}
-
-
-/* -----------------------------
-   TỌA ĐỘ CON TRỎ
-   Trên mobile không có mouse nên
-   ẩn phần này.
-   ----------------------------- */
-
-.cursor-coords {
-    display: none;
-}
-```
-
-}
 
 /* =====================================================
 MOBILE NHỎ
@@ -758,7 +616,7 @@ and (max-height: 500px) {
     padding-top: 5px;
 }
 
-.app-header h1 {
+.header h1 {
     display: none;
 }
 
@@ -1000,4 +858,54 @@ and (max-height: 500px) {
 /* Ẩn linh hoạt nút bài mới khi cần */
 .score-section .btn[hidden] {
     display: none !important;
+}
+
+/* =====================================================
+   KHỐI NÚT ZOOMA / THU NHỎ TRÊN ĐỒ THỊ
+   ===================================================== */
+.zoom-controls {
+    position: absolute;
+    top: 48px;
+    right: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 20;
+}
+
+.zoom-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--text-color);
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.zoom-btn:active {
+    background: #e2e8f0;
+    transform: scale(0.95);
+}
+
+@media screen and (max-width: 768px) {
+    .zoom-controls {
+        top: 20px;
+        right: 8px;
+        gap: 4px;
+    }
+
+    .zoom-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 1rem;
+    }
 }
